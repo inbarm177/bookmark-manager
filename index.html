@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookmark Manager</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      color: #222;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 24px;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* Form */
+    form {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    form h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 5px;
+      color: #555;
+    }
+
+    input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus {
+      border-color: #4a7cf7;
+    }
+
+    button[type="submit"] {
+      margin-top: 8px;
+      padding: 10px 22px;
+      background: #4a7cf7;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button[type="submit"]:hover {
+      background: #3a6ce0;
+    }
+
+    /* Bookmarks list */
+    #bookmarks-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 14px;
+    }
+
+    #bookmarks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bookmark-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .bookmark-info {
+      overflow: hidden;
+    }
+
+    .bookmark-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bookmark-url {
+      font-size: 0.82rem;
+      color: #4a7cf7;
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+
+    .bookmark-url:hover {
+      text-decoration: underline;
+    }
+
+    .bookmark-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .badge {
+      background: #eef2ff;
+      color: #4a7cf7;
+      border-radius: 4px;
+      padding: 2px 9px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .delete-btn,
+    .edit-btn {
+      background: none;
+      border: none;
+      color: #bbb;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 2px 4px;
+      transition: color 0.15s;
+    }
+
+    .delete-btn:hover {
+      color: #e05555;
+    }
+
+    .edit-btn:hover {
+      color: #4a7cf7;
+    }
+
+    /* Edit modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 10px;
+      padding: 28px;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+
+    .modal h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .modal-actions button {
+      padding: 9px 20px;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s;
+    }
+
+    #modal-cancel {
+      background: #f0f0f0;
+      color: #555;
+    }
+
+    #modal-cancel:hover {
+      background: #e0e0e0;
+    }
+
+    #modal-save {
+      background: #4a7cf7;
+      color: #fff;
+    }
+
+    #modal-save:hover {
+      background: #3a6ce0;
+    }
+
+    .empty-state {
+      color: #999;
+      font-size: 0.9rem;
+      padding: 16px 0;
+    }
+
+    /* Search */
+    .search-wrap {
+      margin-bottom: 20px;
+    }
+
+    #search {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #fff;
+      color: #222;
+    }
+
+    #search:focus {
+      border-color: #4a7cf7;
+      outline: none;
+    }
+
+    /* Category groups */
+    .category-group {
+      margin-bottom: 28px;
+    }
+
+    .category-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .category-heading {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .category-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bookmark Manager</h1>
+
+    <form id="bookmark-form">
+      <h2>Add Bookmark</h2>
+      <div class="field">
+        <label for="url">URL</label>
+        <input type="url" id="url" placeholder="https://example.com" required>
+      </div>
+      <div class="field">
+        <label for="title">Title</label>
+        <input type="text" id="title" placeholder="Site name or description" required>
+      </div>
+      <div class="field">
+        <label for="category">Category</label>
+        <input type="text" id="category" placeholder="e.g. Design, Dev, News" required>
+      </div>
+      <button type="submit">Save Bookmark</button>
+    </form>
+
+    <div class="search-wrap">
+      <input type="search" id="search" placeholder="Search by title, URL, or category…" autocomplete="off">
+    </div>
+
+    <!-- Edit modal -->
+    <div id="edit-modal" class="modal-overlay" style="display:none">
+      <div class="modal">
+        <h2>Edit Bookmark</h2>
+        <div class="field">
+          <label for="edit-url">URL</label>
+          <input type="url" id="edit-url" placeholder="https://example.com">
+        </div>
+        <div class="field">
+          <label for="edit-title">Title</label>
+          <input type="text" id="edit-title" placeholder="Site name or description">
+        </div>
+        <div class="field">
+          <label for="edit-category">Category</label>
+          <input type="text" id="edit-category" placeholder="e.g. Design, Dev, News">
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="modal-cancel">Cancel</button>
+          <button type="button" id="modal-save">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <section id="bookmarks-section">
+      <h2>Saved Bookmarks</h2>
+      <div id="bookmarks-list">
+        <p class="empty-state">No bookmarks yet. Add one above.</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const form = document.getElementById('bookmark-form');
+    const list = document.getElementById('bookmarks-list');
+    const searchInput = document.getElementById('search');
+
+    let bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+
+    function render() {
+      const query = searchInput.value.trim().toLowerCase();
+
+      // Filter while keeping original indices so deletion stays correct
+      const filtered = bookmarks
+        .map((b, i) => ({ b, i }))
+        .filter(({ b }) => {
+          if (!query) return true;
+          return b.title.toLowerCase().includes(query) ||
+                 b.url.toLowerCase().includes(query) ||
+                 b.category.toLowerCase().includes(query);
+        });
+
+      if (filtered.length === 0) {
+        list.innerHTML = query
+          ? '<p class="empty-state">No bookmarks match your search.</p>'
+          : '<p class="empty-state">No bookmarks yet. Add one above.</p>';
+        return;
+      }
+
+      // Group filtered results by category
+      const groups = {};
+      const groupOrder = [];
+      filtered.forEach(({ b, i }) => {
+        if (!groups[b.category]) {
+          groups[b.category] = [];
+          groupOrder.push(b.category);
+        }
+        groups[b.category].push({ b, i });
+      });
+
+      list.innerHTML = groupOrder.map(cat => `
+        <div class="category-group">
+          <h3 class="category-heading">${escapeHtml(cat)}</h3>
+          <div class="category-cards">
+            ${groups[cat].map(({ b, i }) => `
+              <div class="bookmark-card">
+                <div class="bookmark-info">
+                  <div class="bookmark-title">${escapeHtml(b.title)}</div>
+                  <a class="bookmark-url" href="${escapeHtml(b.url)}" target="_blank" rel="noopener">
+                    ${escapeHtml(b.url)}
+                  </a>
+                </div>
+                <div class="bookmark-meta">
+                  <span class="badge">${escapeHtml(b.category)}</span>
+                  <button class="edit-btn" onclick="openEdit(${i})" title="Edit">&#9998;</button>
+                  <button class="delete-btn" onclick="remove(${i})" title="Delete">&#x2715;</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function save() {
+      localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+    }
+
+    function remove(index) {
+      bookmarks.splice(index, 1);
+      save();
+      render();
+    }
+
+    let editIndex = null;
+
+    function openEdit(index) {
+      editIndex = index;
+      const b = bookmarks[index];
+      document.getElementById('edit-url').value = b.url;
+      document.getElementById('edit-title').value = b.title;
+      document.getElementById('edit-category').value = b.category;
+      document.getElementById('edit-modal').style.display = 'flex';
+    }
+
+    function closeEdit() {
+      editIndex = null;
+      document.getElementById('edit-modal').style.display = 'none';
+    }
+
+    document.getElementById('modal-cancel').addEventListener('click', closeEdit);
+
+    document.getElementById('edit-modal').addEventListener('click', function (e) {
+      if (e.target === this) closeEdit();
+    });
+
+    document.getElementById('modal-save').addEventListener('click', function () {
+      const url      = document.getElementById('edit-url').value.trim();
+      const title    = document.getElementById('edit-title').value.trim();
+      const category = document.getElementById('edit-category').value.trim();
+      if (!url || !title || !category) return;
+      bookmarks[editIndex] = { url, title, category };
+      save();
+      render();
+      closeEdit();
+    });
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    searchInput.addEventListener('input', render);
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const url      = document.getElementById('url').value.trim();
+      const title    = document.getElementById('title').value.trim();
+      const category = document.getElementById('category').value.trim();
+
+      bookmarks.unshift({ url, title, category });
+      save();
+      render();
+      form.reset();
+    });
+
+    render();
+  </script>
+</body>
+</html>
